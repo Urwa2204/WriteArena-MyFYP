@@ -1,0 +1,29 @@
+# WriteArena — LIGHT single-container image for free, no-card hosts (Render etc.)
+# No transformer/torch: the AI-detector uses its built-in heuristic fallback, so
+# the whole app fits in ~512 MB RAM. Frontend + REST API + WebSocket share one
+# origin on one port. (For the full RoBERTa model you need >2 GB RAM — a paid or
+# card-required tier; see Dockerfile for that build.)
+
+# ---- Stage 1: build the React frontend ----
+FROM node:20-slim AS frontend
+WORKDIR /fe
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
+# ---- Stage 2: FastAPI backend that also serves the built frontend ----
+FROM python:3.11-slim
+ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 NLTK_DATA=/app/nltk_data
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential \
+    && rm -rf /var/lib/apt/lists/*
+COPY backend/requirements-light.txt ./requirements.txt
+RUN pip install -r requirements.txt
+RUN python -m spacy download en_core_web_sm
+RUN python -c "import nltk; nltk.download('words', download_dir='/app/nltk_data')"
+COPY backend/ ./
+COPY --from=frontend /fe/dist ./static
+# Render (and most hosts) inject $PORT; default to 10000 locally.
+EXPOSE 10000
+CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-10000}

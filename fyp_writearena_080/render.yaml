@@ -1,0 +1,35 @@
+# Render Blueprint — free, no credit card. Deploys WriteArena as one Docker
+# web service. Set the secret env vars in the dashboard (marked sync:false).
+services:
+  - type: web
+    name: writearena
+    runtime: docker
+    dockerfilePath: ./Dockerfile.render
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL      # Neon pooled connection string
+        sync: false
+      - key: SECRET_KEY        # auto-generated random secret
+        generateValue: true
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: PUBLIC_BASE_URL   # https://writearena.onrender.com
+        sync: false
+      - key: CORS_ORIGINS      # same URL as PUBLIC_BASE_URL
+        sync: false
+      # --- Email verification (Gmail SMTP example; leave blank to print codes to logs) ---
+      - key: SMTP_HOST         # smtp.gmail.com
+        sync: false
+      - key: SMTP_PORT         # 587
+        sync: false
+      - key: SMTP_USER         # your.address@gmail.com
+        sync: false
+      - key: SMTP_PASSWORD     # 16-char Gmail App Password (not your login password)
+        sync: false
+      - key: SMTP_USE_TLS      # True
+        sync: false
+      - key: EMAIL_FROM        # WriteArena <your.address@gmail.com>
+        sync: false
