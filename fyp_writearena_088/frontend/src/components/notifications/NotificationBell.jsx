@@ -12,7 +12,7 @@ export default function NotificationBell() {
   const fetchNotifs = () => api.get("/notifications").then((r) => {
     const data = r.data || [];
     if (seenIds.current === null) {
-      seenIds.current = new Set(data.map((n) => n.notification_id));
+      seenIds.current = new Set(data.map((n) => n.notification_id));   // first load: no popup
     } else {
       const fresh = data.filter((n) => !n.is_read && !seenIds.current.has(n.notification_id));
       data.forEach((n) => seenIds.current.add(n.notification_id));

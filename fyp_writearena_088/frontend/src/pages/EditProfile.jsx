@@ -8,6 +8,16 @@ import api from "../services/api";
 
 const NICHES = ["technology","society","literature","science","politics","business","sports","health","entertainment","arts"];
 
+// Fields the user must fill. The three URL fields (website, avatar, cover) stay
+// optional on purpose — forcing a URL would block anyone without a website.
+const REQUIRED = [
+  ["display_name", "Display name"],
+  ["pen_name", "Pen name"],
+  ["bio", "Bio"],
+  ["age", "Age"],
+  ["location", "Location"],
+];
+
 export default function EditProfile() {
   const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
@@ -37,7 +47,13 @@ export default function EditProfile() {
   }));
 
   const save = async (e) => {
-    e.preventDefault(); setSaving(true);
+    e.preventDefault();
+    const missing = REQUIRED.filter(([k]) => !String(form[k] ?? "").trim());
+    if (missing.length > 0 || form.interests.length === 0) {
+      toast("Please fill all required fields (marked with *).", "error");
+      return;
+    }
+    setSaving(true);
     try {
       await api.patch("/users/me", form);
       await refreshUser();
@@ -46,12 +62,14 @@ export default function EditProfile() {
     } catch { toast("Error saving profile", "error"); } finally { setSaving(false); }
   };
 
-  const field = (label, key, type = "text", placeholder = "") => (
+  const field = (label, key, type = "text", placeholder = "", required = false) => (
     <div>
-      <label style={{ fontSize: 12, color: "var(--text2)", display: "block", marginBottom: 6 }}>{label}</label>
+      <label style={{ fontSize: 12, color: "var(--text2)", display: "block", marginBottom: 6 }}>
+        {label}{required && <span style={{ color: "var(--blush-d, #c0392b)", marginLeft: 3 }}>*</span>}
+      </label>
       {type === "textarea"
-        ? <textarea className="input" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} placeholder={placeholder} style={{ minHeight: 90 }} />
-        : <input className="input" type={type} value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} placeholder={placeholder} />
+        ? <textarea className="input" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} placeholder={placeholder} required={required} style={{ minHeight: 90 }} />
+        : <input className="input" type={type} value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} placeholder={placeholder} required={required} />
       }
     </div>
   );
@@ -63,15 +81,18 @@ export default function EditProfile() {
           <h1 style={{ fontSize: 20, fontWeight: 700 }}>Edit profile</h1>
           <button className="btn btn-ghost" onClick={() => navigate("/profile/" + user?.user_id)}>Cancel</button>
         </div>
+        <p style={{ fontSize: 12, color: "var(--ink2)", marginBottom: 14 }}>
+          Fields marked <span style={{ color: "var(--blush-d, #c0392b)" }}>*</span> are required.
+        </p>
         <form onSubmit={save} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div className="glass" style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
-            {field("Display name", "display_name", "text", "How others see you")}
-            {field("Pen name", "pen_name", "text", "Your writing alias (optional)")}
-            {field("Bio", "bio", "textarea", "Tell the community about yourself")}
-            {field("Age", "age", "number", "Your age")}
-            {field("Location", "location", "text", "City, Country")}
-            {field("Website", "website", "url", "https://yourwebsite.com")}
-            {field("Avatar URL", "avatar_url", "url", "https://...")}
+            {field("Display name", "display_name", "text", "How others see you", true)}
+            {field("Pen name", "pen_name", "text", "Your writing alias", true)}
+            {field("Bio", "bio", "textarea", "Tell the community about yourself", true)}
+            {field("Age", "age", "number", "Your age", true)}
+            {field("Location", "location", "text", "City, Country", true)}
+            {field("Website", "website", "url", "https://yourwebsite.com (optional)")}
+            {field("Avatar URL", "avatar_url", "url", "https://... (optional)")}
             {hasLocalAvatar && (
               <div style={{ fontSize: 12, color: "var(--ink2)", marginTop: -8, padding: "8px 10px", background: "var(--cream2)", borderRadius: 8 }}>
                 You uploaded a photo directly on this device — it takes priority over the URL above and is what
@@ -81,10 +102,13 @@ export default function EditProfile() {
                 </button> to use the URL instead.
               </div>
             )}
-            {field("Cover image URL", "cover_url", "url", "https://...")}
+            {field("Cover image URL", "cover_url", "url", "https://... (optional)")}
           </div>
           <div className="glass" style={{ padding: 20 }}>
-            <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 10 }}>Interests</label>
+            <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 10 }}>
+              Interests <span style={{ color: "var(--blush-d, #c0392b)" }}>*</span>
+              <span style={{ fontSize: 11, color: "var(--ink2)", fontWeight: 400, marginLeft: 6 }}>(pick at least one)</span>
+            </label>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {NICHES.map((n) => (
                 <button key={n} type="button" onClick={() => toggleNiche(n)} style={{

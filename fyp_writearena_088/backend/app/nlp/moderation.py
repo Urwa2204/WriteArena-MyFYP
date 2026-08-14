@@ -15,6 +15,7 @@ _BASE_TERMS = [
     "fuck", "shit", "bitch", "bastard", "asshole", "dickhead", "cunt",
     "slut", "whore", "retard", "faggot", "nigger", "nigga", "spic", "chink",
     "kike", "wetback", "tranny", "motherfucker", "cocksucker", "twat",
+    "pussy", "wanker", "prick", "skank", "jackass", "dumbfuck",
 ]
 
 _LEET = str.maketrans({"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "@": "a", "$": "s"})
@@ -30,7 +31,7 @@ def _build_pattern(terms) -> re.Pattern:
         # allow repeated letters (e.g. "shiiit") and non-letter separators
         core = r"[\W_]*".join(re.escape(c) + "+" for c in t)
         parts.append(core)
-    return re.compile(r"\b(" + "|".join(parts) + r")\b", re.IGNORECASE)
+    return re.compile(r"\b(" + "|".join(parts) + r")", re.IGNORECASE)
 
 
 _PATTERN = _build_pattern(_BASE_TERMS)

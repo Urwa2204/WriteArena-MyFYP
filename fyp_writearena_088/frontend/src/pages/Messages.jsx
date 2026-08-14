@@ -51,9 +51,9 @@ export default function Messages() {
 
   return (
     <AppLayout toasts={toasts} removeToast={remove}>
-      <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", height: "calc(100vh - 65px)" }}>
+      <div className={"messages-grid" + (active ? " has-active" : "")} style={{ display: "grid", gridTemplateColumns: "300px 1fr", height: "calc(100vh - 65px)" }}>
         {/* Conversations */}
-        <div style={{ borderRight: "1px solid var(--border)", overflowY: "auto" }}>
+        <div className="msg-list" style={{ borderRight: "1px solid var(--border)", overflowY: "auto" }}>
           <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", fontSize: 15, fontWeight: 600, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span>Messages</span>
             <button onClick={openNew} title="New message" style={{ background: "var(--accent-glow)", color: "var(--accent)", border: "1px solid var(--accent-border)", borderRadius: 8, padding: "4px 12px", fontSize: 13, cursor: "pointer" }}>+ New</button>
@@ -102,18 +102,22 @@ export default function Messages() {
 
         {/* Messages panel */}
         {active ? (
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border)", fontWeight: 600, fontSize: 15 }}>{active.username}</div>
+          <div className="msg-panel" style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border)", fontWeight: 600, fontSize: 15, display: "flex", alignItems: "center", gap: 10 }}>
+              <button className="msg-back btn btn-ghost" onClick={() => setActive(null)} style={{ padding: "4px 10px", fontSize: 13 }}>← Back</button>
+              <span>{active.username}</span>
+            </div>
             <div style={{ flex: 1, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 10 }}>
               {messages.map((m) => {
                 const mine = m.sender_id === user?.user_id;
                 return (
                   <div key={m.message_id} style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start" }}>
                     <div style={{
-                      maxWidth: "60%", padding: "10px 14px", borderRadius: 14, fontSize: 14,
+                      maxWidth: "75%", padding: "10px 14px", borderRadius: 14, fontSize: 14,
                       background: mine ? "var(--accent)" : "var(--glass)",
                       color: mine ? "#fff" : "var(--text)",
                       border: mine ? "none" : "1px solid var(--border)",
+                      wordBreak: "break-word", overflowWrap: "anywhere", whiteSpace: "pre-wrap",
                     }}>
                       {m.content}
                     </div>

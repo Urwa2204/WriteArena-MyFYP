@@ -14,6 +14,9 @@
 # ---- Stage 1: build the React frontend ----
 FROM node:20-slim AS frontend
 WORKDIR /fe
+# Vite bakes VITE_* vars in at BUILD time. Render passes dashboard env vars as
+# Docker build args, so declaring this ARG lets the Google client ID reach the
+# build. Leave unset and the "Continue with Google" button simply won't show.
 ARG VITE_GOOGLE_CLIENT_ID
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 COPY frontend/package*.json ./

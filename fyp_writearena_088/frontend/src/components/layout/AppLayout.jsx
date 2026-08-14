@@ -16,7 +16,7 @@ export default function AppLayout({ children, toasts, removeToast }) {
       <Sidebar />
       <div className="main-content">
         <header className="topbar">
-          <div style={{ fontSize: 14, color: "var(--ink2)", fontFamily: "var(--sans)" }}>
+          <div className="topbar-welcome" style={{ fontSize: 14, color: "var(--ink2)", fontFamily: "var(--sans)" }}>
             {user && (
               <span>
                 Welcome back,{" "}
@@ -34,7 +34,7 @@ export default function AppLayout({ children, toasts, removeToast }) {
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-           <UserSearch />
+            <UserSearch />
             <NotificationBell />
             {user?.role !== "admin" && (
               <button

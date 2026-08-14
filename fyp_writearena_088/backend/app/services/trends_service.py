@@ -46,12 +46,13 @@ NICHE_QUERIES = {
 # echoing the headline. `{lede}` is a paraphrased, lower-cased clause built
 # from the headline (see _heuristic_rewrite), never the verbatim headline text.
 _REWRITE_TEMPLATES = [
-    "Take a clear position on how {lede}, and defend it with specifics.",
-    "Write about who is most affected by {lede} — make it concrete, not abstract.",
-    "Explain what it means that {lede}, using an example from your own life or city.",
-    "Make the strongest case you can against the popular take on {lede}.",
-    "Imagine explaining, years from now, that {lede} — what would surprise people most?",
-    "Argue the overlooked angle in the coverage of {lede}.",
+    "Write about {topic}. Share your own thoughts and experiences.",
+    "What comes to mind when you think about {topic}? Write freely.",
+    "Describe how {topic} shows up in everyday life.",
+    "Tell a short story inspired by {topic}.",
+    "If a friend asked you about {topic}, what would you tell them?",
+    "Write about why {topic} matters to people today.",
+    "Share an opinion about {topic} and explain why you feel that way.",
 ]
 
 
@@ -99,10 +100,10 @@ def _has_specific_content(headline: str) -> bool:
     # let a proper noun that only happens to lead the headline (e.g. "Netflix
     # renews...") get penalized for that — a longer headline is specific enough
     # on its own even without a second internal capital.
-    has_mid_proper_noun = any(w[0].isupper() for w in words[1:])
-    has_number = bool(re.search(r"\d", headline))
-    is_long_enough = len(words) >= 8
-    return has_mid_proper_noun or has_number or is_long_enough
+    # Easy-topics mode: any reasonably-worded headline of a few words is fine;
+    # we no longer require a proper noun or number, which kept only very
+    # news-specific (and often hard) headlines.
+    return len(words) >= 4
 
 
 def _lede_clause(headline: str) -> str:
@@ -119,12 +120,28 @@ def _lede_clause(headline: str) -> str:
     return core
 
 
+def _topic_phrase(headline: str) -> str:
+    """Reduce a headline to a short, simple, general topic phrase (a few words,
+    lower-cased) so prompts stay easy and approachable rather than tied to the
+    specifics of one news story."""
+    core = re.sub(r'[\"\u2018\u2019\u201c\u201d]', "", headline).strip()
+    core = re.split(r"[,:\-\u2014\u2013]", core)[0].strip()   # drop sub-clauses
+    words = core.split()
+    if len(words) > 6:
+        words = words[:6]
+    _tail = {"for","of","to","in","on","at","the","a","an","and","with","as",
+             "by","from","that","after","over","into","amid","its","their"}
+    while words and words[-1].lower() in _tail:
+        words.pop()
+    return " ".join(words).rstrip(".").lower()
+
+
 def _heuristic_rewrite(headline: str) -> str:
     """Rule-based paraphrase — always available, no network/LLM dependency.
     Picks a template deterministically per headline so re-scrapes are stable."""
-    lede = _lede_clause(headline)
-    template = _REWRITE_TEMPLATES[abs(hash(lede)) % len(_REWRITE_TEMPLATES)]
-    return template.format(lede=lede)
+    topic = _topic_phrase(headline)
+    template = _REWRITE_TEMPLATES[abs(hash(topic)) % len(_REWRITE_TEMPLATES)]
+    return template.format(topic=topic)
 
 
 def _llm_rewrite(headline: str):
@@ -166,7 +183,9 @@ def _rewrite_headline_to_prompt(headline: str):
         return None
     if not _has_specific_content(headline):
         return None
-    return _llm_rewrite(headline) or _heuristic_rewrite(headline)
+    # Use the simple heuristic so prompts stay easy and general (the LLM path
+    # was tuned to produce hard, argumentative, very specific prompts).
+    return _heuristic_rewrite(headline)
 
 
 def _fetch_headlines(query: str, limit: int = 12):

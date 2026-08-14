@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.db.database import get_db
-from app.db.models import Message, User, Follow
+from app.db.models import Message, User, Follow, Notification
+from app.nlp.moderation import contains_abuse
 from app.core.dependencies import get_current_user
 from app.core.rate_limit import limiter
 import uuid
@@ -73,9 +74,14 @@ async def send_message(request: Request, peer_id: str, body: MsgBody, current_us
         ).first()
         if not connected:
             raise HTTPException(403, "You can only message people you follow or who follow you.")
+    if contains_abuse(body.content):
+        raise HTTPException(400, "Your message contains inappropriate language and can't be sent.")
     m = Message(message_id=str(uuid.uuid4()), sender_id=current_user.user_id,
                 receiver_id=peer_id, content=body.content[:2000])
     db.add(m)
+    if peer_id != current_user.user_id:
+        db.add(Notification(user_id=peer_id, type="message",
+                            message=f"{current_user.display_name or current_user.username} sent you a message"))
     db.commit()
     db.refresh(m)
     return {"message_id": m.message_id, "created_at": m.created_at}

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text, func
 from pydantic import BaseModel
 from app.db.database import get_db
-from app.db.models import User, Follow, UserBadge, Badge, Submission, AnalysisResult, XpEvent
+from app.db.models import User, Follow, UserBadge, Badge, Submission, AnalysisResult, XpEvent, Notification
 from app.core.dependencies import get_current_user
 from typing import Optional
 from datetime import datetime, timedelta
@@ -63,6 +63,7 @@ def leaderboard(db: Session = Depends(get_db), limit: int = 50, scope: str = "al
         return out
     users = db.query(User).filter(User.status == "active").order_by(User.xp_points.desc()).limit(limit).all()
     return [_user_basic(u) for u in users]
+
 @router.get("/search")
 def search_users(q: str = "", current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Find other writers by username, display name, or pen name."""
@@ -81,7 +82,6 @@ def search_users(q: str = "", current_user: User = Depends(get_current_user), db
 
 
 @router.get("/{user_id}")
-@router.get("/{user_id}")
 def get_user(user_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     user = db.query(User).filter(User.user_id == user_id).first()
     if not user:
@@ -96,6 +96,8 @@ def follow_user(user_id: str, current_user: User = Depends(get_current_user), db
     if existing:
         raise HTTPException(400, "Already following")
     db.add(Follow(follower_id=current_user.user_id, following_id=user_id))
+    db.add(Notification(user_id=user_id, type="follow",
+                        message=f"{current_user.display_name or current_user.username} started following you"))
     db.commit()
     return {"message": "Following"}
 

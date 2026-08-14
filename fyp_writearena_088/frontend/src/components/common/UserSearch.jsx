@@ -32,7 +32,7 @@ export default function UserSearch() {
 
   return (
     <div ref={boxRef} style={{ position: "relative" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--cream2)", border: "1px solid var(--border)", borderRadius: 999, padding: "6px 12px", width: 220 }}>
+      <div className="user-search-box" style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--cream2)", border: "1px solid var(--border)", borderRadius: 999, padding: "6px 12px", width: 220 }}>
         <Icon name="search" size={15} />
         <input
           value={q}

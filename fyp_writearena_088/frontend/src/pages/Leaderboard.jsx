@@ -20,7 +20,7 @@ export default function Leaderboard() {
     api.get("/users/leaderboard?limit=50&scope=" + scope).then((r) => setUsers(r.data)).catch(() => {});
   }, [scope]);
 
-const podiumColors = ["var(--lav)", "var(--sky)", "var(--peach)"]; // 1st, 2nd, 3rd
+  const podiumColors = ["var(--lav)", "var(--sky)", "var(--peach)"]; // 1st, 2nd, 3rd
   const podiumOrder = [1, 0, 2]; // render 2nd, 1st, 3rd
   const topXp = users.length ? Math.max(users[0].xp_points, 1) : 1;
   const barHeight = (xp) => 70 + (Math.max(0, xp) / topXp) * 120; // scales with XP

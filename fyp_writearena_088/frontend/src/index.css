@@ -441,7 +441,25 @@ textarea.input { resize: vertical; min-height: 100px; }
   .sidebar { width: var(--sidebar-c); }
   .main-content { margin-left: var(--sidebar-c); }
   .nav-label, .logo-text { display: none; }
-  .page { padding: 18px; }
+  .page { padding: 16px; }
+  .topbar { flex-wrap: wrap; height: auto; gap: 10px; padding: 10px 14px; }
+  .topbar-welcome { display: none; }
+  .user-search-box { width: 150px !important; }
+}
+
+@media (max-width: 640px) {
+  .grid-4 { grid-template-columns: 1fr; }
+  .page { padding: 12px; }
+  /* Messages: show one pane at a time on phones */
+  .messages-grid { grid-template-columns: 1fr !important; height: calc(100vh - 60px); }
+  .messages-grid .msg-list { display: block; }
+  .messages-grid .msg-panel { display: none; }
+  .messages-grid.has-active .msg-list { display: none; }
+  .messages-grid.has-active .msg-panel { display: flex !important; }
+}
+
+@media (min-width: 641px) {
+  .msg-back { display: none !important; }
 }
 
 /* ============================================================
