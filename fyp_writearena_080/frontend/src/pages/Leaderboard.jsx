@@ -20,9 +20,10 @@ export default function Leaderboard() {
     api.get("/users/leaderboard?limit=50&scope=" + scope).then((r) => setUsers(r.data)).catch(() => {});
   }, [scope]);
 
-  const podiumColors = ["var(--lav)", "var(--sky)", "var(--peach)"]; // 1st, 2nd, 3rd
+const podiumColors = ["var(--lav)", "var(--sky)", "var(--peach)"]; // 1st, 2nd, 3rd
   const podiumOrder = [1, 0, 2]; // render 2nd, 1st, 3rd
-  const heights = [128, 162, 104];
+  const topXp = users.length ? Math.max(users[0].xp_points, 1) : 1;
+  const barHeight = (xp) => 70 + (Math.max(0, xp) / topXp) * 120; // scales with XP
 
   return (
     <AppLayout toasts={toasts} removeToast={remove}>
@@ -50,7 +51,7 @@ export default function Leaderboard() {
                     <Avatar user={u} size={54} style={{ margin: "0 auto 8px" }} />
                     <div style={{ fontFamily: "var(--serif)", fontSize: 14, fontWeight: 600 }}>{u.display_name || u.username}</div>
                     <div style={{ fontSize: 12, color: "var(--ink2)" }}>{u.xp_points.toLocaleString()} XP</div>
-                    <div style={{ width: 84, height: heights[idx], marginTop: 10, borderRadius: "10px 10px 0 0",
+                    <div style={{ width: 84, height: barHeight(u.xp_points), marginTop: 10, borderRadius: "10px 10px 0 0",
                       background: `linear-gradient(180deg, ${color}, transparent)`, display: "flex", alignItems: "flex-start",
                       justifyContent: "center", paddingTop: 10 }}>
                       <span style={{ fontFamily: "var(--serif)", fontSize: 26, fontWeight: 700, color: "#fff" }}>{roman(idx + 1)}</span>
@@ -71,7 +72,11 @@ export default function Leaderboard() {
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: "var(--serif)", fontSize: 15, fontWeight: 600,
                   color: i < 3 ? ["var(--lav-d)","var(--sky-d)","var(--peach-d)"][i] : "var(--ink)" }}>{u.display_name || u.username}</div>
-                <div style={{ fontSize: 11, color: "var(--ink2)" }}>Level {u.level} · {u.streak_count} day streak</div>
+                <div style={{ fontSize: 11, color: "var(--ink2)", marginBottom: 5 }}>Level {u.level} · {u.streak_count} day streak</div>
+                <div style={{ height: 6, background: "var(--cream2)", borderRadius: 4, overflow: "hidden", maxWidth: 320 }}>
+                  <div style={{ height: "100%", width: Math.max(3, (u.xp_points / topXp) * 100) + "%",
+                    background: i < 3 ? ["var(--lav)","var(--sky)","var(--peach)"][i] : "var(--lav)", borderRadius: 4 }} />
+                </div>
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontFamily: "var(--serif)", fontWeight: 600, color: "var(--lav-d)" }}>{u.xp_points.toLocaleString()} XP</div>

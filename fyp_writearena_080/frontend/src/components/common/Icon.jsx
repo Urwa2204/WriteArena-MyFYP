@@ -75,6 +75,12 @@ const PATHS = {
       <path d="M10 19a2 2 0 0 0 4 0" />
     </>
   ),
+  search: (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="M21 21l-4.3-4.3" />
+    </>
+  ),
   // small flame — streak (replaces 🔥)
   flame: (
     <>

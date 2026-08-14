@@ -2,6 +2,7 @@ import React from "react";
 import Sidebar from "./Sidebar";
 import ToastContainer from "../notifications/ToastContainer";
 import NotificationBell from "../notifications/NotificationBell";
+import UserSearch from "../common/UserSearch";
 import Icon from "../common/Icon";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -33,6 +34,7 @@ export default function AppLayout({ children, toasts, removeToast }) {
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+           <UserSearch />
             <NotificationBell />
             {user?.role !== "admin" && (
               <button

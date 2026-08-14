@@ -1,16 +1,32 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import api from "../../services/api";
 import Icon from "../common/Icon";
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [notifs, setNotifs] = useState([]);
+  const [popup, setPopup] = useState(null);
+  const seenIds = useRef(null);
+
+  const fetchNotifs = () => api.get("/notifications").then((r) => {
+    const data = r.data || [];
+    if (seenIds.current === null) {
+      seenIds.current = new Set(data.map((n) => n.notification_id));
+    } else {
+      const fresh = data.filter((n) => !n.is_read && !seenIds.current.has(n.notification_id));
+      data.forEach((n) => seenIds.current.add(n.notification_id));
+      if (fresh.length) {
+        setPopup(fresh[0]);
+        setTimeout(() => setPopup(null), 5000);
+      }
+    }
+    setNotifs(data);
+  }).catch(() => {});
 
   useEffect(() => {
-    api.get("/notifications").then((r) => setNotifs(r.data)).catch(() => {});
-    const iv = setInterval(() => {
-      api.get("/notifications").then((r) => setNotifs(r.data)).catch(() => {});
-    }, 30000);
+    fetchNotifs();
+    const iv = setInterval(fetchNotifs, 30000);
     return () => clearInterval(iv);
   }, []);
 
@@ -23,6 +39,24 @@ export default function NotificationBell() {
 
   return (
     <div className="bell-wrap" style={{ position: "relative" }}>
+      <AnimatePresence>
+        {popup && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.96 }}
+            onClick={() => { setPopup(null); setOpen(true); }}
+            style={{ position: "absolute", right: 0, top: "calc(100% + 10px)", width: 300, cursor: "pointer",
+              background: "var(--card-solid)", border: "1px solid var(--lav-d)", borderLeft: "3px solid var(--lav-d)",
+              borderRadius: "var(--radius)", boxShadow: "var(--shadow)", zIndex: 300, padding: "12px 14px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <Icon name="bell" size={14} />
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--lav-d)", fontFamily: "var(--serif)" }}>New notification</span>
+            </div>
+            <div style={{ fontSize: 13, color: "var(--ink)" }}>{popup.message}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <button
         className="btn btn-ghost"
         style={{ padding: "8px 11px", position: "relative" }}

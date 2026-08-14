@@ -63,7 +63,24 @@ def leaderboard(db: Session = Depends(get_db), limit: int = 50, scope: str = "al
         return out
     users = db.query(User).filter(User.status == "active").order_by(User.xp_points.desc()).limit(limit).all()
     return [_user_basic(u) for u in users]
+@router.get("/search")
+def search_users(q: str = "", current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Find other writers by username, display name, or pen name."""
+    from sqlalchemy import or_
+    term = (q or "").strip()
+    if len(term) < 1:
+        return []
+    like = f"%{term}%"
+    rows = (db.query(User)
+            .filter(User.status == "active",
+                    or_(User.username.ilike(like), User.display_name.ilike(like), User.pen_name.ilike(like)))
+            .order_by(User.xp_points.desc()).limit(10).all())
+    return [{"user_id": u.user_id, "username": u.username, "display_name": u.display_name,
+             "pen_name": u.pen_name, "avatar_url": u.avatar_url, "xp_points": u.xp_points,
+             "rank": u.rank} for u in rows if u.user_id != current_user.user_id]
 
+
+@router.get("/{user_id}")
 @router.get("/{user_id}")
 def get_user(user_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     user = db.query(User).filter(User.user_id == user_id).first()
